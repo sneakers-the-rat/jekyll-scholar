@@ -190,14 +190,18 @@ module Jekyll
 
         # Clear @bibliography if sources change! See #282
         unless @paths.nil? || @paths == paths
+
           @bibliography = nil
+          bib_cache.clear
         end
 
         unless @bibliography
-          @bibliography = BibTeX::Bibliography.parse(
-            paths.reduce('') { |s, p| s << IO.read(p) },
-            bibtex_options
-          )
+          @bibliography = bib_cache.getset('bib') do
+            BibTeX::Bibliography.parse(
+              paths.reduce('') { |s, p| s << IO.read(p) },
+              bibtex_options
+            )
+          end
 
           @paths = paths
 
@@ -209,6 +213,10 @@ module Jekyll
         end
 
         @bibliography
+      end
+
+      def bib_cache
+        @@bib_cache ||= Jekyll::Cache.new("BibCache")
       end
 
       def bibliography_stale?
