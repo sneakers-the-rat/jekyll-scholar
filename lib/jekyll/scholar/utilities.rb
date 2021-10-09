@@ -176,6 +176,10 @@ module Jekyll
         }
       end
 
+      def cite_cache
+        @@cite_cache ||= Jekyll::Cache.new("CiteCache")
+      end
+
       # :nodoc: backwards compatibility
       def bibtex_path
         bibtex_paths[0]
@@ -719,14 +723,21 @@ module Jekyll
       end
 
       def cite(keys)
-        items = keys.map do |key|
-          if bibliography.key?(key)
-            entry = bibliography[key]
-            entry = entry.convert(*bibtex_filters) unless bibtex_filters.empty?
-          else
-            return missing_reference
-          end
+        cite_cache.getset(keys) do
+          inner_cite(keys)
         end
+      end
+
+      def inner_cite(keys)
+        items = keys.map do |key|
+
+            if bibliography.key?(key)
+              entry = bibliography[key]
+              entry = entry.convert(*bibtex_filters) unless bibtex_filters.empty?
+            else
+              return missing_reference
+            end
+        end 
 
         link_to link_target_for(keys[0]), render_citation(items), {class: config['cite_class']}
       end
