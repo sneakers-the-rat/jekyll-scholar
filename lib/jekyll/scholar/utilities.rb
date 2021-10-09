@@ -723,17 +723,13 @@ module Jekyll
       end
 
       def cite(keys)
-        cite_cache.getset(keys) do
-          inner_cite(keys)
-        end
-      end
-
-      def inner_cite(keys)
         items = keys.map do |key|
 
             if bibliography.key?(key)
               entry = bibliography[key]
-              entry = entry.convert(*bibtex_filters) unless bibtex_filters.empty?
+              entry = cite_cache.getset(key) do
+                entry.convert(*bibtex_filters) unless bibtex_filters.empty?
+              end
             else
               return missing_reference
             end
