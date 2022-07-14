@@ -177,7 +177,7 @@ module Jekyll
       end
 
       def cite_cache
-        @@cite_cache ||= Jekyll::Cache.new("CiteCache")
+        @@cite_cache ||= Jekyll::Cache.new("jekyll-scholar::CiteCache")
       end
 
       # :nodoc: backwards compatibility
@@ -216,7 +216,7 @@ module Jekyll
       end
 
       def bib_cache
-        @@bib_cache ||= Jekyll::Cache.new("BibCache")
+        @@bib_cache ||= Jekyll::Cache.new("jekyll-scholar::BibCache")
       end
 
       def bibliography_stale?
