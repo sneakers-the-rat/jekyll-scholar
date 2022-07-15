@@ -730,20 +730,17 @@ module Jekyll
         "#{relative}##{[prefix, key].compact.join('-')}"
       end
 
-      def format_cite(key, bibliography)
-        entry = bibliography[key]
-        entry.convert(*bibtex_filters) unless bibtex_filters.empty?
-      end
-
       def cite(keys)
         items = keys.map do |key|
-          if bibliography.key?(key)
-            entry = cite_cache.getset(key) do
-              format_cite(key, bibliography)
+
+            if bibliography.key?(key)
+              entry = bibliography[key]
+              entry = cite_cache.getset(key) do
+                entry.convert(*bibtex_filters) unless bibtex_filters.empty?
+              end
+            else
+              return missing_reference
             end
-          else
-            return missing_reference
-          end
         end 
 
         link_to link_target_for(keys[0]), render_citation(items), {class: config['cite_class']}
