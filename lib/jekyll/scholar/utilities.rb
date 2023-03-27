@@ -176,6 +176,10 @@ module Jekyll
         }
       end
 
+      def cite_cache
+        @@cite_cache ||= Jekyll::Cache.new("jekyll-scholar::CiteCache")
+      end
+
       # :nodoc: backwards compatibility
       def bibtex_path
         bibtex_paths[0]
@@ -186,14 +190,18 @@ module Jekyll
 
         # Clear @bibliography if sources change! See #282
         unless @paths.nil? || @paths == paths
+
           @bibliography = nil
+          bib_cache.clear
         end
 
         unless @bibliography
-          @bibliography = BibTeX::Bibliography.parse(
-            paths.reduce('') { |s, p| s << IO.read(p) },
-            bibtex_options
-          )
+          @bibliography = bib_cache.getset('bib') do
+            BibTeX::Bibliography.parse(
+              paths.reduce('') { |s, p| s << IO.read(p) },
+              bibtex_options
+            )
+          end
 
           @paths = paths
 
@@ -205,6 +213,10 @@ module Jekyll
         end
 
         @bibliography
+      end
+
+      def bib_cache
+        @@bib_cache ||= Jekyll::Cache.new("jekyll-scholar::BibCache")
       end
 
       def bibliography_stale?
@@ -729,13 +741,16 @@ module Jekyll
 
       def cite(keys)
         items = keys.map do |key|
-          if bibliography.key?(key)
-            entry = bibliography[key]
-            entry = entry.convert(*bibtex_filters) unless bibtex_filters.empty?
-          else
-            return missing_reference
-          end
-        end
+
+            if bibliography.key?(key)
+              entry = bibliography[key]
+              entry = cite_cache.getset(key) do
+                entry.convert(*bibtex_filters) unless bibtex_filters.empty?
+              end
+            else
+              return missing_reference
+            end
+        end 
 
         link_to link_target_for(keys[0]), render_citation(items), {class: config['cite_class']}
       end
