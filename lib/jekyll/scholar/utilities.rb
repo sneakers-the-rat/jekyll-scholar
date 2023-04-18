@@ -192,20 +192,16 @@ module Jekyll
         unless @paths.nil? || @paths == paths
 
           @bibliography = nil
-          # bib_cache.clear
+          bib_cache.clear
         end
 
         unless @bibliography
-          # @bibliography = bib_cache.getset('bib') do
-          #   BibTeX::Bibliography.parse(
-          #     paths.reduce('') { |s, p| s << IO.read(p) },
-          #     bibtex_options
-          #   )
-          # end
-          @bibliography = BibTeX::Bibliography.parse(
-               paths.reduce('') { |s, p| s << IO.read(p) },
-               bibtex_options
-             )
+          @bibliography = bib_cache.getset('bib') do
+            BibTeX::Bibliography.parse(
+              paths.reduce('') { |s, p| s << IO.read(p) },
+              bibtex_options
+            )
+          end
 
           @paths = paths
 
